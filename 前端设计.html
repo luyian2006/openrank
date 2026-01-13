@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>开源项目推荐 — 炫酷前端</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:Inter, 'Segoe UI', Roboto, Arial}
+    body{
+      background: linear-gradient(120deg,#081029 0%, #1b1033 50%, #0b1020 100%);
+      color:#e6eef8;display:block; /* 改为block以支持滚动 */
+      overflow-y: auto; /* 允许垂直滚动 */
+    }
+
+    /* 动态背景 blob */
+    .bg-blob{position:fixed;inset:-20%;z-index:0;filter:blur(60px);opacity:0.45;pointer-events:none}
+    /* 粒子画布：固定全屏，不参与交互，置于 blob 之上，card 之下 */
+    .particles{position:fixed;left:0;top:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
+    /* 新增：鼠标跟随粒子画布 */
+    .mouse-particles{position:fixed;left:0;top:0;width:100%;height:100%;display:block;z-index:2;pointer-events:none}
+    .blob{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:float 8s ease-in-out infinite}
+    .blob.b1{width:520px;height:520px;left:-10%;top:-10%;background:radial-gradient(circle at 30% 30%, #7b61ff, transparent 40%)}
+    .blob.b2{width:420px;height:420px;right:-5%;bottom:-5%;background:radial-gradient(circle at 70% 70%, #ff4fb1, transparent 40%);animation-duration:11s}
+    .blob.b3{width:300px;height:300px;left:50%;top:10%;background:radial-gradient(circle at 50% 50%, #21ffd6, transparent 40%);animation-duration:13s}
+    @keyframes float{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.04)}100%{transform:translateY(0) scale(1)}}
+
+    /* 滚动到顶部按钮 */
+    .scroll-top-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7b61ff, #ff4fb1);
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: none; /* 默认隐藏 */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(123, 97, 255, 0.4);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .scroll-top-btn.show {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .scroll-top-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(123, 97, 255, 0.6);
+    }
+
+    .scroll-top-btn:active {
+      transform: translateY(-2px);
+    }
+
+    .card{position:relative;z-index:3;width:980px;max-width:96%;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));border-radius:18px;padding:26px;box-shadow:0 20px 60px rgba(3,6,23,0.7);border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px);margin:40px auto; /* 居中并添加上下边距 */}
+
+    h1{margin:0;font-size:26px;display:flex;align-items:center;gap:12px}
+    h1 .glow{background:linear-gradient(90deg,#9be7ff,#c38bff,#ff8fb1);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+    p.lead{margin:6px 0 16px 0;color:#bcd4ff}
+
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .input{flex:1;min-width:150px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#e9f2ff;outline:none}
+    .input:focus{box-shadow:0 6px 20px rgba(120,80,255,0.12);border-color:rgba(120,80,255,0.25)}
+    .small{flex:0 0 140px}
+
+    /* 发光按钮与点击波纹 */
+    .btn{position:relative;padding:12px 18px;border-radius:12px;border:none;background:linear-gradient(90deg,#7b61ff,#ff4fb1);color:white;font-weight:700;cursor:pointer;overflow:hidden}
+    .btn::after{content:'';position:absolute;inset:0;border-radius:12px;box-shadow:0 8px 40px rgba(123,97,255,0.25);opacity:0;transition:opacity .22s}
+    .btn:hover::after{opacity:1}
+    .btn:active{transform:translateY(1px)}
+
+    .status-line{display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:#9fb7ff}
+
+    .results{margin-top:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .card-item{position:relative;overflow:hidden;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.06));transition:box-shadow .25s}
+    .card-item:hover{box-shadow:0 18px 40px rgba(15,10,40,0.6)}
+    .card-item::before{content:'';position:absolute;inset: -40%;background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.04), transparent 10%);opacity:0;transition:opacity .3s;pointer-events:none}
+    .card-item:hover::before{opacity:1}
+
+    .repo-title{font-weight:800;color:#fff;display:flex;justify-content:space-between;align-items:center}
+    .meta{font-size:12px;color:#b9d1ff;margin-top:8px}
+    .score{background:linear-gradient(90deg,#ffd86b,#ff5fa8);color:#0b1020;padding:6px 10px;border-radius:999px;font-weight:800}
+
+    @media (max-width:880px){.results{grid-template-columns:1fr}.small{flex:1}}
+
+    .spinner{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.12);border-top-color:#fff;animation:spin .8s linear infinite;display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* 小徽章 */
+    .tag{display:inline-block;padding:6px 8px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:999px;font-size:12px;margin-right:8px;color:#dfeeff}
+    .goto-btn{margin-left:12px;padding:6px 10px;border-radius:10px;border:none;background:linear-gradient(90deg,#6ef3d1,#7be7ff);color:#021022;font-weight:700;cursor:pointer;text-decoration:none}
+  </style>
+</head>
+<body>
+  <canvas id="particles" class="particles" aria-hidden></canvas>
+  <!-- 新增：鼠标跟随粒子 -->
+  <canvas id="mouseParticles" class="mouse-particles" aria-hidden></canvas>
+  
+  <div class="bg-blob" aria-hidden>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+
+  <!-- 滚动到顶部按钮 -->
+  <button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTop()" title="返回顶部">
+    ↑
+  </button>
+
+  <div class="card">
+    <h1><span class="glow">开源项目</span> 智能推荐</h1>
+    <p class="lead">输入 GitHub Token（可选）和用户名（必填）。</p>
+
+    <div class="controls">
+      <input id="token" class="input" placeholder="GitHub Token（留空使用公开 API）">
+      <input id="username" class="input" placeholder="GitHub 用户名（必填）">
+      <input id="topn" class="input small" type="number" min="1" max="20" value="8" placeholder="数量">
+      <button id="go" class="btn small">开始推荐</button>
+    </div>
+
+    <div id="status" class="status-line">准备就绪。 <span style="opacity:.85">结果将在下方显示。</span></div>
+
+    <div id="results" class="results" style="margin-top:12px;"></div>
+  </div>
+
+  <script>
+    function getId(id){ return document.getElementById(id); }
+
+    // ============ 新增：滚动到顶部函数 ============
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    // ============ 新增：显示/隐藏返回顶部按钮 ============
+    function toggleScrollTopButton() {
+      const scrollTopBtn = getId('scrollTopBtn');
+      if (window.scrollY > 300) {
+        scrollTopBtn.classList.add('show');
+      } else {
+        scrollTopBtn.classList.remove('show');
+      }
+    }
+
+    // 倒置鼠标偏移到 card-item 的 CSS 变量，用于光斑跟随
+    function attachTilt(el){
+      el.addEventListener('mousemove', (ev)=>{
+        const r = el.getBoundingClientRect();
+        const mx = ((ev.clientX - r.left) / r.width) * 100;
+        const my = ((ev.clientY - r.top) / r.height) * 100;
+        el.style.setProperty('--mx', mx+'%');
+        el.style.setProperty('--my', my+'%');
+        const rx = (ev.clientY - (r.top + r.height/2)) / 20;
+        const ry = -(ev.clientX - (r.left + r.width/2)) / 25;
+        el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
+      });
+      el.addEventListener('mouseleave', ()=>{ el.style.transform=''; });
+    }
+
+    // ============ 新增：按钮点击粒子特效 ============
+    function createButtonParticles(x, y){
+      const colors = ['#7b61ff', '#ff4fb1', '#21ffd6'];
+      const particles = [];
+      
+      for(let i=0; i<12; i++){
+        particles.push({
+          x, y,
+          size: Math.random()*1.5 + 0.5,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          speed: Math.random()*2 + 1,
+          angle: Math.random()*Math.PI*2,
+          life: 1
+        });
+      }
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '1000';
+      document.body.appendChild(canvas);
+      
+      const w = canvas.width = window.innerWidth;
+      const h = canvas.height = window.innerHeight;
+      
+      let animationId;
+      const animateParticles = () => {
+        ctx.clearRect(0,0,w,h);
+        let alive = false;
+        
+        particles.forEach(p => {
+          p.life -= 0.04;
+          if(p.life > 0){
+            alive = true;
+            p.x += Math.cos(p.angle) * p.speed;
+            p.y += Math.sin(p.angle) * p.speed;
+            
+            ctx.globalAlpha = p.life * 0.7;
+            ctx.beginPath();
+            ctx.fillStyle = p.color;
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            ctx.fill();
+          }
+        });
+        
+        if(alive){
+          animationId = requestAnimationFrame(animateParticles);
+        } else {
+          cancelAnimationFrame(animationId);
+          setTimeout(() => {
+            if (canvas.parentNode) {
+              document.body.removeChild(canvas);
+            }
+          }, 100);
+        }
+      };
+      
+      animateParticles();
+    }
+
+    // ============ 新增：卡片出现粒子特效 ============
+    function createCardParticles(x, y) {
+      const colors = ['#7b61ff', '#ff4fb1', '#21ffd6'];
+      const particles = [];
+      
+      for(let i=0; i<8; i++){
+        particles.push({
+          x, y,
+          size: Math.random()*1 + 0.3,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          speed: Math.random()*1.5 + 0.5,
+          angle: Math.random()*Math.PI*2,
+          life: 1
+        });
+      }
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '1000';
+      document.body.appendChild(canvas);
+      
+      const w = canvas.width = window.innerWidth;
+      const h = canvas.height = window.innerHeight;
+      
+      let animationId;
+      const animateParticles = () => {
+        ctx.clearRect(0,0,w,h);
+        let alive = false;
+        
+        particles.forEach(p => {
+          p.life -= 0.05;
+          if(p.life > 0){
+            alive = true;
+            p.x += Math.cos(p.angle) * p.speed;
+            p.y += Math.sin(p.angle) * p.speed;
+            
+            ctx.globalAlpha = p.life * 0.5;
+            ctx.beginPath();
+            ctx.fillStyle = p.color;
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            ctx.fill();
+          }
+        });
+        
+        if(alive){
+          animationId = requestAnimationFrame(animateParticles);
+        } else {
+          cancelAnimationFrame(animationId);
+          setTimeout(() => {
+            if (canvas.parentNode) {
+              document.body.removeChild(canvas);
+            }
+          }, 100);
+        }
+      };
+      
+      animateParticles();
+    }
+
+    // ============ 新增：鼠标跟随粒子特效 ============
+    function initMouseParticles() {
+      const canvas = document.getElementById('mouseParticles');
+      const ctx = canvas.getContext('2d');
+      let w = 0, h = 0;
+      let mouseX = 0, mouseY = 0;
+      let particles = [];
+      
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+      
+      // 跟踪鼠标位置
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // 在鼠标位置创建粒子
+        if (Math.random() > 0.7) { // 70%的概率创建粒子，避免太密集
+          particles.push({
+            x: mouseX,
+            y: mouseY,
+            size: Math.random() * 1.5 + 0.5,
+            color: `rgba(${Math.random()*100+155}, ${Math.random()*100+155}, 255, 0.6)`,
+            speedX: (Math.random() - 0.5) * 0.5,
+            speedY: (Math.random() - 0.5) * 0.5,
+            life: 1
+          });
+        }
+      });
+      
+      function draw() {
+        // 清屏但保留一些痕迹
+        ctx.fillStyle = 'rgba(8, 16, 41, 0.1)';
+        ctx.fillRect(0, 0, w, h);
+        
+        // 更新和绘制粒子
+        for(let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life -= 0.02;
+          
+          if(p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+          
+          ctx.globalAlpha = p.life;
+          ctx.beginPath();
+          const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size*3);
+          gradient.addColorStop(0, p.color);
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          
+          ctx.fillStyle = gradient;
+          ctx.arc(p.x, p.y, p.size*2, 0, Math.PI*2);
+          ctx.fill();
+        }
+        
+        requestAnimationFrame(draw);
+      }
+      
+      draw();
+    }
+
+    // 在 DOM 完全就绪后绑定事件并初始化粒子
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const status = getId('status')
+      const results = getId('results')
+      const goBtn = getId('go')
+      
+      // ============ 新增：初始化鼠标跟随粒子 ============
+      initMouseParticles();
+      
+      // ============ 新增：监听滚动事件 ============
+      window.addEventListener('scroll', toggleScrollTopButton);
+
+      // 推荐按钮点击事件
+      goBtn.addEventListener('click', async (ev)=>{
+        const token = getId('token').value.trim()
+        const username = getId('username').value.trim()
+        const topn = getId('topn').value || 8
+        
+        if(!username){ 
+          // 按钮抖动效果
+          const btn = ev.target;
+          btn.style.transform = 'translateX(10px)';
+          setTimeout(() => btn.style.transform = '', 100);
+          setTimeout(() => btn.style.transform = 'translateX(-10px)', 150);
+          setTimeout(() => btn.style.transform = '', 200);
+          alert('请输入用户名'); 
+          return;
+        }
+        
+        // ============ 新增：按钮点击粒子特效 ============
+        const rect = ev.target.getBoundingClientRect();
+        createButtonParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+        
+        status.innerHTML = '<span class="spinner"></span> 请求中…'
+        results.innerHTML = ''
+        
+        try{
+          const resp = await fetch('/recommend', {
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({token, username, top_n: topn})
+          })
+          const data = await resp.json()
+          if(!data.ok){ status.innerText = '错误: '+(data.error||'未知'); results.innerHTML = data.trace?('<pre style="color:#fcc">'+data.trace.slice(0,1000)+'</pre>') : '' ; return }
+          status.innerText = `为 ${username} 推荐 ${data.results.length} 个项目`;
+          if(data.results.length===0){ results.innerHTML = '<div style="color:#bcd4ff">未找到推荐结果</div>'; return }
+
+          data.results.forEach((p, index)=>{
+            setTimeout(() => {
+              const el = document.createElement('div'); 
+              el.className='card-item'
+              el.style.opacity = '0';
+              el.style.transform = 'translateY(20px)';
+              
+              const title = document.createElement('div'); 
+              title.className='repo-title'
+              
+              // 强制指向 GitHub 仓库地址（优先使用 full_name、html_url、repo、owner/name 等）
+              let gh = '';
+              if(p.full_name) gh = p.full_name;
+              else if(p.html_url && p.html_url.includes('github.com')) gh = p.html_url.split('github.com/')[1].replace(/\/$/, '');
+              else if(p.repo) gh = p.repo;
+              else if(p.owner && p.name) gh = `${p.owner}/${p.name}`;
+              else if(p.name && p.name.includes('/')) gh = p.name;
+              
+              const link = document.createElement('a'); 
+              link.href = gh ? ('https://github.com/' + gh) : (p.repo_url || '#'); 
+              link.target='_blank'; 
+              link.innerText = p.name || p.full_name || p.repo || 'unknown'; 
+              link.style.color='inherit'; 
+              link.style.textDecoration='none'
+              title.appendChild(link)
+              
+              const sc = document.createElement('span'); 
+              sc.className='score'; 
+              sc.innerText = (p.total_score||p.score||p.match||0).toFixed? Number(p.total_score||p.score||p.match||0).toFixed(1) : (p.total_score||p.score||p.match||0)
+              title.appendChild(sc)
+              
+              // 跳转按钮
+              const goto = document.createElement('a'); 
+              goto.className='goto-btn'; 
+              goto.innerText='前往 GitHub';
+              goto.href = gh ? ('https://github.com/' + gh) : (p.repo_url || '#');
+              goto.target = '_blank'; 
+              goto.rel = 'noopener noreferrer';
+              goto.onclick = (e) => {
+                e.preventDefault();
+                window.open(goto.href, '_blank');
+                return false;
+              };
+              title.appendChild(goto)
+              
+              const meta = document.createElement('div'); 
+              meta.className='meta';
+              const tags = (p.tags && p.tags.slice && p.tags.slice(0,3)) || []
+              meta.innerHTML = `${p.language||p.lang||''} <span style="opacity:.6">·</span> ${p.domain||''} <div style='margin-top:8px'>${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`
+              
+              el.appendChild(title); 
+              el.appendChild(meta)
+              results.appendChild(el)
+              attachTilt(el)
+              
+              // ============ 新增：卡片淡入动画和粒子效果 ============
+              setTimeout(() => {
+                el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+                
+                // 卡片出现时添加粒子效果
+                const cardRect = el.getBoundingClientRect();
+                createCardParticles(
+                  cardRect.left + cardRect.width/2,
+                  cardRect.top + cardRect.height/2
+                );
+              }, 50);
+              
+            }, index * 200); // 延迟显示每个卡片
+          });
+
+        }catch(e){ console.error(e); status.innerText='请求失败'; results.innerHTML = '<div style="color:#f88">'+e.toString()+'</div>' }
+      })
+
+      // 粒子效果（Canvas） — 初始化在 DOMReady 后执行
+      (function(){
+        console.log('init particles')
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let w=0,h=0,particles=[];
+        function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight}
+        window.addEventListener('resize', resize); resize();
+
+        function rand(min,max){return Math.random()*(max-min)+min}
+        function create(){
+          particles = [];
+          const count = Math.round((w*h)/90000); // density
+          for(let i=0;i<count;i++){
+            particles.push({x:rand(0,w), y:rand(0,h), r:rand(0.6,2.2), vx:rand(-0.2,0.2), vy:rand(-0.2,0.2), a:rand(0.2,0.95), da:rand(0.002,0.01)})
+          }
+        }
+        create();
+        window.addEventListener('resize', create);
+
+        function draw(){
+          ctx.clearRect(0,0,w,h);
+          for(const p of particles){
+            p.x += p.vx; p.y += p.vy; p.a += p.da * (Math.random()>0.5?1:-1);
+            if(p.x < -10) p.x = w+10; if(p.x> w+10) p.x=-10;
+            if(p.y < -10) p.y = h+10; if(p.y> h+10) p.y=-10;
+            ctx.beginPath();
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r*6);
+            grad.addColorStop(0, `rgba(255,255,255,${0.9*p.a})`);
+            grad.addColorStop(0.4, `rgba(173,216,255,${0.12*p.a})`);
+            grad.addColorStop(1, `rgba(173,216,255,0)`);
+            ctx.fillStyle = grad;
+            ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fill();
+          }
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+    });
+  </script>
+</body>
+</html>
